@@ -1,5 +1,5 @@
-import type { User } from "@app-types/user.types";
-import type { Video } from "@app-types/video.types";
+import type { User } from "@app-types/modules/user.types";
+import type { Video } from "@app-types/modules/video.types";
 
 export enum RoomStatus {
     WAITING = "WAITING",

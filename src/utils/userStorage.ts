@@ -1,4 +1,4 @@
-import type { User } from "@app-types/user.types"
+import type { User } from "@app-types/modules/user.types"
 
 export function getOrCreateUser(): User {
     const storedUser = localStorage.getItem('vecomigo:user')
