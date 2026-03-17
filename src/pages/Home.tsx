@@ -3,6 +3,10 @@ import logo from "@assets/logo.png";
 
 import { Play, Users, ListVideo, Link2, Sparkles } from "lucide-react";
 
+import GlowParticlesBackground from "@components/GlowParticlesBackground";
+import CTA from "@components/CTA";
+import Footer from "@components/Footer";
+
 export default function Home() {
     const { createRoom } = useRoom(undefined);
 
@@ -10,11 +14,10 @@ export default function Home() {
         <div className="bg-[var(--bg-base)] text-white">
             {/* HERO */}
 
-            <section className="min-h-screen flex flex-col items-center justify-center relative px-6 overflow-hidden bg-animated">
-                {/* glow central */}
-                <div className="absolute w-[600px] h-[600px] bg-purple-500/20 blur-[160px] rounded-full" />
+            <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+                <GlowParticlesBackground />
 
-                <div className="flex flex-col items-center gap-8 relative z-10">
+                <div className="relative z-10 flex flex-col items-center gap-8">
                     <div className="relative">
                         <img src={logo} className="w-40 select-none" />
 
@@ -66,20 +69,7 @@ flex items-center gap-2
                 </h2>
 
                 <div className="grid md:grid-cols-3 gap-8">
-                    {/* card */}
-
-                    <div
-                        className="
-bg-[var(--bg-card)]
-p-8
-rounded-2xl
-border border-[var(--border-default)]
-hover:border-purple-500/40
-hover:-translate-y-2
-transition-all
-duration-300
-"
-                    >
+                    <div className="bg-[var(--bg-card)] p-8 rounded-2xl border border-[var(--border-default)] hover:border-purple-500/40 hover:-translate-y-2 transition-all duration-300">
                         <div className="bg-purple-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
                             <Play className="text-purple-400" size={22} />
                         </div>
@@ -94,20 +84,7 @@ duration-300
                         </p>
                     </div>
 
-                    {/* card */}
-
-                    <div
-                        className="
-bg-[var(--bg-card)]
-p-8
-rounded-2xl
-border border-[var(--border-default)]
-hover:border-orange-500/40
-hover:-translate-y-2
-transition-all
-duration-300
-"
-                    >
+                    <div className="bg-[var(--bg-card)] p-8 rounded-2xl border border-[var(--border-default)] hover:border-orange-500/40 hover:-translate-y-2 transition-all duration-300">
                         <div className="bg-orange-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
                             <Users className="text-orange-400" size={22} />
                         </div>
@@ -121,20 +98,7 @@ duration-300
                         </p>
                     </div>
 
-                    {/* card */}
-
-                    <div
-                        className="
-bg-[var(--bg-card)]
-p-8
-rounded-2xl
-border border-[var(--border-default)]
-hover:border-blue-500/40
-hover:-translate-y-2
-transition-all
-duration-300
-"
-                    >
+                    <div className="bg-[var(--bg-card)] p-8 rounded-2xl border border-[var(--border-default)] hover:border-blue-500/40 hover:-translate-y-2 transition-all duration-300">
                         <div className="bg-blue-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
                             <ListVideo className="text-blue-400" size={22} />
                         </div>
@@ -163,7 +127,6 @@ duration-300
                             <div className="bg-purple-500/10 p-4 rounded-xl">
                                 <Sparkles className="text-purple-400" />
                             </div>
-
                             <p className="text-zinc-400">Crie uma sala</p>
                         </div>
 
@@ -171,7 +134,6 @@ duration-300
                             <div className="bg-orange-500/10 p-4 rounded-xl">
                                 <Link2 className="text-orange-400" />
                             </div>
-
                             <p className="text-zinc-400">
                                 Envie o link para seus amigos
                             </p>
@@ -181,7 +143,6 @@ duration-300
                             <div className="bg-blue-500/10 p-4 rounded-xl">
                                 <Users className="text-blue-400" />
                             </div>
-
                             <p className="text-zinc-400">
                                 Assistam sincronizados
                             </p>
@@ -190,61 +151,9 @@ duration-300
                 </div>
             </section>
 
-            {/* CTA */}
+            <CTA createRoom={createRoom} />
 
-            <section className="py-32 text-center relative overflow-hidden">
-                <div className="absolute w-[600px] h-[600px] bg-purple-500/20 blur-[160px] rounded-full left-1/2 -translate-x-1/2 top-0" />
-
-                <div className="relative z-10 max-w-xl mx-auto">
-                    <h2 className="text-4xl font-bold mb-4 leading-tight">
-                        Pronto para assistir <br />
-                        <span className="bg-gradient-to-r from-orange-400 to-purple-500 bg-clip-text text-transparent">
-                            junto com seus amigos?
-                        </span>
-                    </h2>
-
-                    <p className="text-zinc-400 mb-8">
-                        Crie uma sala em segundos, compartilhe o link e
-                        aproveite vídeos sincronizados com quem você quiser.
-                    </p>
-
-                    <button
-                        onClick={createRoom}
-                        className="
-px-12 py-5
-rounded-xl
-font-semibold
-bg-gradient-to-r
-from-orange-400
-via-purple-500
-to-blue-500
-hover:scale-105
-transition
-shadow-xl
-hover:shadow-purple-500/40
-"
-                    >
-                        Criar minha sala
-                    </button>
-                </div>
-            </section>
-
-            {/* FOOTER */}
-
-            <footer className="border-t border-zinc-900 py-10 text-center text-zinc-500 text-sm">
-                <p className="mb-2">
-                    Feito por{" "}
-                    <span className="text-white font-medium">piedro404</span>
-                </p>
-
-                <a
-                    href="https://github.com/piedro404"
-                    target="_blank"
-                    className="text-purple-400 hover:underline"
-                >
-                    github.com/piedro404
-                </a>
-            </footer>
+            <Footer />
         </div>
     );
 }
