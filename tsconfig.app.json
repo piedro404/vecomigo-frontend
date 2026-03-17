@@ -16,11 +16,33 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases */
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "paths": {
+      "@app-types/*": [
+        "src/types/*"
+      ],
+      "@components/*": [
+        "src/components/*"
+      ],
+      "@hooks/*": [
+        "src/hooks/*"
+      ],
+      "@pages/*": [
+        "src/pages/*"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
+    "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
