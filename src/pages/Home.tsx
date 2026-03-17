@@ -41,22 +41,51 @@ export default function Home() {
                     <button
                         onClick={createRoom}
                         className="
+group
+relative
 px-10 py-4
 rounded-xl
 font-semibold
+flex items-center gap-2
+text-white
+overflow-hidden
+hover:scale-105
+transition
+"
+                    >
+                        {/* borda arco iris */}
+                        <span
+                            className="
+absolute inset-0
+rounded-xl
+opacity-0
+group-hover:opacity-100
+transition
+bg-[conic-gradient(from_180deg,#f59e0b,#8b5cf6,#3b82f6,#f59e0b)]
+blur-md
+animate-[spin_6s_linear_infinite]
+"
+                        />
+
+                        {/* fundo animado */}
+                        <span
+                            className="
+absolute inset-[2px]
+rounded-xl
 bg-gradient-to-r
 from-orange-400
 via-purple-500
 to-blue-500
-hover:scale-105
-transition
-shadow-lg
-hover:shadow-purple-500/30
-flex items-center gap-2
+animate-gradient
+z-0
 "
-                    >
-                        <Play size={18} />
-                        Criar sala
+                        />
+
+                        {/* conteúdo */}
+                        <span className="relative z-10 flex items-center gap-2">
+                            <Play size={18} className="text-white fill-white" />
+                            Criar sala
+                        </span>
                     </button>
                 </div>
             </section>
