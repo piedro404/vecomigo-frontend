@@ -93,10 +93,10 @@ export function useRoom(roomId: string | undefined) {
     );
 
     return {
-        createRoom,
         user,
         users,
         videoState,
+        createRoom,
         updateName,
     };
 }
