@@ -85,10 +85,18 @@ export function useRoom(roomId: string | undefined) {
         [user, roomId],
     );
 
+    const createRoom = useCallback(() => {
+        socket.emit("create-room", { user }, (response: ApiResponse<Room>) => {
+            if (!response.status || !response.data) return;
+            navigate(`/room/${response.data.id}`);
+        });
+    }, [user]);
+
     return {
         user,
         users,
         videoState,
         updateName,
+        createRoom,
     };
 }
