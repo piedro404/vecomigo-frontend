@@ -13,6 +13,13 @@ export function useRoom(roomId: string | undefined) {
     const [users, setUsers] = useState<User[]>([]);
     const [videoState, setVideoState] = useState<VideoState | null>(null);
 
+    const createRoom = useCallback(() => {
+        socket.emit("create-room", { user }, (response: ApiResponse<Room>) => {
+            if (!response.status || !response.data) return;
+            navigate(`/room/${response.data.id}`);
+        });
+    }, [user]);
+
     useEffect(() => {
         if (!roomId) {
             navigate("/", { replace: true });
@@ -85,18 +92,11 @@ export function useRoom(roomId: string | undefined) {
         [user, roomId],
     );
 
-    const createRoom = useCallback(() => {
-        socket.emit("create-room", { user }, (response: ApiResponse<Room>) => {
-            if (!response.status || !response.data) return;
-            navigate(`/room/${response.data.id}`);
-        });
-    }, [user]);
-
     return {
+        createRoom,
         user,
         users,
         videoState,
         updateName,
-        createRoom,
     };
 }
