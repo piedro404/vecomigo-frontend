@@ -1,5 +1,5 @@
 import { useRoom } from "@hooks/useRoom";
-import logo from "@assets/logo.png";
+import Logo from "@components/Logo";
 
 import { Play, Users, ListVideo, Link2, Sparkles } from "lucide-react";
 
@@ -19,9 +19,17 @@ export default function Home() {
 
                 <div className="relative z-10 flex flex-col items-center gap-8">
                     <div className="relative">
-                        <img src={logo} className="w-40 select-none" />
+                        <Logo size="lg" />
 
-                        <div className="absolute inset-0 bg-purple-500/20 blur-[120px] rounded-full -z-10" />
+                        <div
+                            className="
+        absolute inset-0
+        bg-[var(--accent-purple)]/20
+        blur-[120px]
+        rounded-full
+        -z-10
+    "
+                        />
                     </div>
 
                     <div className="text-center space-y-3">

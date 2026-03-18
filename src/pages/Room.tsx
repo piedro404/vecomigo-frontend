@@ -6,8 +6,9 @@ import { useVideo } from "@hooks/useVideo";
 import { VideoPlayer } from "@components/VideoPlayer";
 import { VideoControls } from "@components/VideoControls";
 import { Sidebar } from "@components/sidebar/Sidebar";
-
-import { Play, Menu } from "lucide-react";
+import Logo from "@components/Logo";
+    
+import { Menu } from "lucide-react";
 
 export default function Room() {
     const { roomId } = useParams<{ roomId: string }>();
@@ -25,18 +26,7 @@ export default function Room() {
             <header className="flex items-center justify-between px-4 h-14 border-b border-[var(--border-default)] backdrop-blur-md bg-black/40">
                 {/* LEFT */}
                 <div className="flex items-center gap-4">
-                    <Link to="/" className="flex items-center gap-2 group">
-                        <div className="w-6 h-6 rounded-md bg-gradient-to-r from-orange-400 to-purple-500 flex items-center justify-center shadow-md group-hover:scale-110 transition">
-                            <Play size={12} className="text-white fill-white" />
-                        </div>
-
-                        <span className="font-black tracking-tight">
-                            ve
-                            <span className="text-transparent bg-gradient-to-r from-orange-400 to-purple-500 bg-clip-text">
-                                comigo
-                            </span>
-                        </span>
-                    </Link>
+                    <Logo size="md" />
 
                     <div className="w-px h-4 bg-[var(--border-default)]" />
 
