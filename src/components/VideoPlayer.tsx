@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from "react"
-import { Play } from "lucide-react"
+import { useEffect, useRef, useCallback, useState } from "react"
+import { Play, Volume2 } from "lucide-react"
 import type { VideoState } from "@app-types/modules/video.types"
 
 declare global {
@@ -29,14 +29,25 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
     const initialized = useRef(false)
     const isReady = useRef(false)
     const pendingState = useRef<VideoState | null>(null)
-    const hasPlayedOnce = useRef(false)         // true após o primeiro play do usuário
+    const hasPlayedOnce = useRef(false)
     const lastPlayTime = useRef<number>(0)
+    const lastBufferingTime = useRef<number>(0)
     const pauseDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [isMuted, setIsMuted] = useState(true)
 
     const callbacksRef = useRef({ onPlay, onPause, onSeek, onEnded })
     useEffect(() => {
         callbacksRef.current = { onPlay, onPause, onSeek, onEnded }
     })
+
+    const enableSound = () => {
+        const player = playerRef.current
+        if (!player) return
+        player.unMute()
+        player.setVolume(100)
+        hasPlayedOnce.current = true
+        setIsMuted(false)
+    }
 
     const applyState = useCallback((state: VideoState) => {
         const player = playerRef.current
@@ -57,25 +68,7 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
 
         if (currentVideo.youtubeId !== lastVideoId.current) {
             lastVideoId.current = currentVideo.youtubeId
-
-            // Mute trick só na primeira vez — browser bloqueia autoplay com som
-            if (state.isPlaying && !hasPlayedOnce.current) {
-                player.mute()
-            }
-
             player.loadVideoById({ videoId: currentVideo.youtubeId, startSeconds: state.currentTime })
-
-            if (state.isPlaying && !hasPlayedOnce.current) {
-                // Aguarda PLAYING e desmuta
-                const waitAndUnmute = setInterval(() => {
-                    if (player.getPlayerState?.() === 1) {
-                        player.unMute()
-                        player.setVolume(100)
-                        clearInterval(waitAndUnmute)
-                    }
-                }, 100)
-                setTimeout(() => clearInterval(waitAndUnmute), 5000)
-            }
 
             if (!state.isPlaying) {
                 const waitAndPause = setInterval(() => {
@@ -121,11 +114,8 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                     playsinline: 1,
                 },
                 events: {
-                    onReady: (event: any) => {
+                    onReady: () => {
                         isReady.current = true
-                        // Desmuta imediatamente — browser aceita após onReady
-                        event.target.unMute()
-                        event.target.setVolume(100)
                         if (pendingState.current) {
                             applyState(pendingState.current)
                             pendingState.current = null
@@ -138,8 +128,11 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                         const currentTime = player.getCurrentTime?.() ?? 0
 
                         switch (event.data) {
+                            case window.YT.PlayerState.BUFFERING: {
+                                lastBufferingTime.current = Date.now()
+                                break
+                            }
                             case window.YT.PlayerState.PLAYING: {
-                                hasPlayedOnce.current = true  // nunca mais precisa do mute trick
                                 if (pauseDebounceRef.current) {
                                     clearTimeout(pauseDebounceRef.current)
                                     pauseDebounceRef.current = null
@@ -149,6 +142,10 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                                 break
                             }
                             case window.YT.PlayerState.PAUSED: {
+                                // ignora pause que vem logo após buffering (seek interno)
+                                const msSinceBuffering = Date.now() - lastBufferingTime.current
+                                if (msSinceBuffering < 500) break
+
                                 const msSincePlay = Date.now() - lastPlayTime.current
                                 if (msSincePlay < PAUSE_DEBOUNCE_MS) break
 
@@ -218,6 +215,20 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                 className="w-full h-full"
                 style={{ visibility: hasVideo ? "visible" : "hidden", pointerEvents: hasVideo ? "auto" : "none" }}
             />
+
+            {/* Botão ativar som — só aparece na primeira vez */}
+            {hasVideo && isMuted && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <button
+                        onClick={enableSound}
+                        className="flex items-center gap-4 px-10 py-6 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-xl text-white shadow-2xl transition hover:scale-105"
+                    >
+                        <Volume2 size={32} />
+                        <span className="text-xl font-semibold">Ativar som</span>
+                    </button>
+                </div>
+            )}
+
             {!hasVideo && (
                 <div
                     className="absolute inset-0 flex flex-col items-center justify-center gap-4"
