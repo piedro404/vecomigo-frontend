@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react"
+import { Play } from "lucide-react"
 import type { VideoState } from "@app-types/modules/video.types"
 
 declare global {
@@ -50,13 +51,27 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
         isRemoteAction.current = true
 
         if (currentVideo.youtubeId !== lastVideoId.current) {
+            // Vídeo novo — sempre usa loadVideoById para garantir que carrega
+            // e depois controla play/pause manualmente via onStateChange BUFFERING
             lastVideoId.current = currentVideo.youtubeId
-            if (state.isPlaying) {
-                player.loadVideoById({ videoId: currentVideo.youtubeId, startSeconds: state.currentTime })
-            } else {
-                player.cueVideoById({ videoId: currentVideo.youtubeId, startSeconds: state.currentTime })
+            player.loadVideoById({ videoId: currentVideo.youtubeId, startSeconds: state.currentTime })
+
+            // Se não deveria estar tocando, pausa assim que estiver pronto
+            if (!state.isPlaying) {
+                const waitAndPause = setInterval(() => {
+                    const s = player.getPlayerState?.()
+                    // PLAYING(1) ou BUFFERING(3) — já carregou o suficiente para pausar
+                    if (s === 1 || s === 3) {
+                        player.pauseVideo()
+                        clearInterval(waitAndPause)
+                    }
+                }, 100)
+
+                // Garante que o interval não vive para sempre
+                setTimeout(() => clearInterval(waitAndPause), 5000)
             }
         } else {
+            // Mesmo vídeo — só sincroniza tempo e estado
             const playerTime = player.getCurrentTime?.() ?? 0
             if (Math.abs(playerTime - state.currentTime) > SYNC_THRESHOLD) {
                 player.seekTo(state.currentTime, true)
@@ -80,7 +95,15 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
             playerRef.current = new window.YT.Player(playerDiv, {
                 width: rect.width || window.innerWidth,
                 height: rect.height || window.innerHeight,
-                playerVars: { autoplay: 0, controls: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, playsinline: 1 },
+                playerVars: {
+                    autoplay: 0,
+                    controls: 1,
+                    rel: 0,
+                    modestbranding: 1,
+                    iv_load_policy: 3,
+                    playsinline: 1,
+                    disablekb: 0,
+                },
                 events: {
                     onReady: () => {
                         isReady.current = true
@@ -94,7 +117,6 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                         const player = playerRef.current
                         if (!player) return
                         const currentTime = player.getCurrentTime?.() ?? 0
-                        // console.log("Player state changed:", event.data, "Current time:", currentTime)
                         switch (event.data) {
                             case window.YT.PlayerState.PLAYING:
                                 callbacksRef.current.onPlay(currentTime); break
@@ -155,14 +177,18 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                 style={{ visibility: hasVideo ? "visible" : "hidden", pointerEvents: hasVideo ? "auto" : "none" }}
             />
             {!hasVideo && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#0d0d0d]">
-                    <div className="w-16 h-16 rounded-2xl bg-[#1a1a1a] flex items-center justify-center">
-                        <svg className="w-7 h-7 text-[#333]" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                        </svg>
+                <div
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-4"
+                    style={{ background: "var(--bg-surface)" }}
+                >
+                    <div
+                        className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                        style={{ background: "var(--bg-elevated)" }}
+                    >
+                        <Play size={28} style={{ color: "var(--text-muted)" }} />
                     </div>
-                    <p className="text-[#444] text-sm">Nenhum vídeo na fila</p>
-                    <p className="text-[#2a2a2a] text-xs">Adicione um link do YouTube na playlist</p>
+                    <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nenhum vídeo na fila</p>
+                    <p className="text-xs" style={{ color: "var(--text-ghost)" }}>Adicione um link do YouTube na playlist</p>
                 </div>
             )}
         </div>

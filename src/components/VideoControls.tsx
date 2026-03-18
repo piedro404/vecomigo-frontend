@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
+import { Play, Pause, SkipForward } from "lucide-react"
 import type { VideoState } from "@app-types/modules/video.types"
 
 type Props = {
@@ -21,14 +22,38 @@ function formatTime(seconds: number): string {
 export function VideoControls({ videoState, playerRef, onPlay, onPause, onSeek, onSkip }: Props) {
     const [isDragging, setIsDragging] = useState(false)
     const [dragValue, setDragValue] = useState(0)
+    const [playerDuration, setPlayerDuration] = useState(0)
+    const [playerCurrentTime, setPlayerCurrentTime] = useState(0)
     const progressRef = useRef<HTMLDivElement>(null)
+    const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
     const currentVideo = videoState?.playlist[0]
-    const duration = currentVideo?.duration ?? 0
-    const currentTime = isDragging ? dragValue : (videoState?.currentTime ?? 0)
-    const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0
     const isPlaying = videoState?.isPlaying ?? false
     const hasVideo = !!currentVideo
+
+    // Lê duração e tempo atual diretamente do player em tempo real
+    useEffect(() => {
+        if (tickRef.current) clearInterval(tickRef.current)
+
+        tickRef.current = setInterval(() => {
+            const player = playerRef.current
+            if (!player) return
+
+            const dur = player.getDuration?.() ?? 0
+            const cur = player.getCurrentTime?.() ?? 0
+
+            if (dur > 0) setPlayerDuration(dur)
+            if (!isDragging) setPlayerCurrentTime(cur)
+        }, 250)
+
+        return () => {
+            if (tickRef.current) clearInterval(tickRef.current)
+        }
+    }, [playerRef, isDragging])
+
+    const duration = playerDuration
+    const currentTime = isDragging ? dragValue : playerCurrentTime
+    const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0
 
     const getTimeFromEvent = useCallback((e: React.MouseEvent) => {
         const rect = progressRef.current?.getBoundingClientRect()
@@ -48,12 +73,14 @@ export function VideoControls({ videoState, playerRef, onPlay, onPause, onSeek, 
 
     const handleMouseUp = (e: React.MouseEvent) => {
         if (!isDragging) return
+        const time = getTimeFromEvent(e)
         setIsDragging(false)
-        onSeek(getTimeFromEvent(e))
+        setPlayerCurrentTime(time)
+        onSeek(time)
     }
 
     const togglePlay = () => {
-        const t = playerRef.current?.getCurrentTime?.() ?? videoState?.currentTime ?? 0
+        const t = playerRef.current?.getCurrentTime?.() ?? 0
         if (isPlaying) onPause(t)
         else onPlay(t)
     }
@@ -63,15 +90,16 @@ export function VideoControls({ videoState, playerRef, onPlay, onPause, onSeek, 
             {/* Progress bar */}
             <div
                 ref={progressRef}
-                className={`w-full h-1 bg-[#222] rounded-full relative group ${hasVideo ? "cursor-pointer" : "cursor-default opacity-40"}`}
+                className={`w-full h-1 rounded-full relative group ${hasVideo ? "cursor-pointer" : "cursor-default opacity-30"}`}
+                style={{ background: "var(--bg-elevated)" }}
                 onMouseDown={hasVideo ? handleMouseDown : undefined}
                 onMouseMove={hasVideo ? handleMouseMove : undefined}
                 onMouseUp={hasVideo ? handleMouseUp : undefined}
                 onMouseLeave={hasVideo && isDragging ? handleMouseUp : undefined}
             >
                 <div
-                    className="h-full bg-[#e63946] rounded-full transition-[width] duration-100 relative"
-                    style={{ width: `${progress}%` }}
+                    className="h-full rounded-full relative transition-[width] duration-100"
+                    style={{ width: `${progress}%`, background: "var(--accent-red)" }}
                 >
                     {hasVideo && (
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -86,41 +114,34 @@ export function VideoControls({ videoState, playerRef, onPlay, onPause, onSeek, 
                     <button
                         onClick={togglePlay}
                         disabled={!hasVideo}
-                        className="w-9 h-9 rounded-lg bg-[#1a1a1a] hover:bg-[#e63946] text-white flex items-center justify-center transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                        style={{ background: "var(--bg-elevated)", color: "var(--text-primary)" }}
                     >
-                        {isPlaying ? (
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <rect x="6" y="4" width="4" height="16" />
-                                <rect x="14" y="4" width="4" height="16" />
-                            </svg>
-                        ) : (
-                            <svg className="w-4 h-4 translate-x-[1px]" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
-                        )}
+                        {isPlaying ? <Pause size={16} /> : <Play size={16} className="translate-x-[1px]" />}
                     </button>
 
                     {/* Skip */}
                     <button
                         onClick={onSkip}
                         disabled={!hasVideo}
-                        className="w-9 h-9 rounded-lg bg-[#1a1a1a] hover:bg-[#222] text-[#666] hover:text-white flex items-center justify-center transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                        style={{ background: "var(--bg-elevated)", color: "var(--text-muted)" }}
                         title="Pular vídeo"
                     >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z" />
-                        </svg>
+                        <SkipForward size={16} />
                     </button>
 
                     {/* Time */}
-                    <span className="text-[#555] text-xs tabular-nums">
+                    <span className="text-xs tabular-nums" style={{ color: "var(--text-muted)" }}>
                         {formatTime(currentTime)}
-                        {duration > 0 && <span className="text-[#333]"> / {formatTime(duration)}</span>}
+                        {duration > 0 && (
+                            <span style={{ color: "var(--text-muted)" }}> / {formatTime(duration)}</span>
+                        )}
                     </span>
                 </div>
 
                 {currentVideo && (
-                    <p className="text-[#444] text-xs truncate max-w-[200px]" title={currentVideo.title}>
+                    <p className="text-xs truncate max-w-[200px]" style={{ color: "var(--text-muted)" }} title={currentVideo.title}>
                         {currentVideo.title}
                     </p>
                 )}
