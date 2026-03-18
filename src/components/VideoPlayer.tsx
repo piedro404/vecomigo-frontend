@@ -94,6 +94,7 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                         const player = playerRef.current
                         if (!player) return
                         const currentTime = player.getCurrentTime?.() ?? 0
+                        // console.log("Player state changed:", event.data, "Current time:", currentTime)
                         switch (event.data) {
                             case window.YT.PlayerState.PLAYING:
                                 callbacksRef.current.onPlay(currentTime); break

@@ -32,21 +32,22 @@ export function useRoom(roomId: string | undefined) {
             (
                 response: ApiResponse<{
                     room: Room;
-                    videoState: VideoState | undefined;
+                    videoState: VideoState | null;
                 }>,
             ) => {
                 if (!response.status || !response.data) {
                     navigate("/", { replace: true });
                     return;
                 }
-
+                
+                setVideoState(response.data.videoState);
                 setUsers(Array.from(response.data.room.users.values()));
-                setVideoState(response.data.videoState ?? null);
             },
         );
 
-        socket.on("room-updated", (data: { users: User[] }) => {
+        socket.on("room-updated", (data: { users: User[], videoState: VideoState | null }) => {
             setUsers(data.users);
+            setVideoState(data.videoState);
 
             if (data.users.length === 0) {
                 navigate("/", { replace: true });
