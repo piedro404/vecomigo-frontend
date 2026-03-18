@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import { Send } from "lucide-react"
 import type { User } from "@app-types/modules/user.types"
 
 type ChatMessage = {
@@ -34,7 +35,7 @@ export function ChatTab({ currentUser }: Props) {
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 py-10">
-                        <p className="text-[#333] text-sm">Nenhuma mensagem ainda</p>
+                        <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nenhuma mensagem ainda</p>
                     </div>
                 ) : (
                     messages.map((msg) => (
@@ -42,12 +43,21 @@ export function ChatTab({ currentUser }: Props) {
                             key={msg.id}
                             className={`flex flex-col gap-1 ${msg.userId === currentUser.id ? "items-end" : "items-start"}`}
                         >
-                            <span className="text-[10px] text-[#444]">{msg.userName}</span>
-                            <div className={`px-3 py-2 rounded-xl text-sm max-w-[85%] break-words ${
-                                msg.userId === currentUser.id
-                                    ? "bg-[#e63946]/20 text-white rounded-tr-sm"
-                                    : "bg-[#1a1a1a] text-[#ccc] rounded-tl-sm"
-                            }`}>
+                            <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                                {msg.userName}
+                            </span>
+                            <div
+                                className="px-3 py-2 rounded-xl text-sm max-w-[85%] break-words"
+                                style={msg.userId === currentUser.id ? {
+                                    background: "rgba(230,57,70,0.2)",
+                                    color: "var(--text-primary)",
+                                    borderTopRightRadius: 4,
+                                } : {
+                                    background: "var(--bg-elevated)",
+                                    color: "var(--text-secondary)",
+                                    borderTopLeftRadius: 4,
+                                }}
+                            >
                                 {msg.text}
                             </div>
                         </div>
@@ -56,9 +66,14 @@ export function ChatTab({ currentUser }: Props) {
                 <div ref={endRef} />
             </div>
 
-            <div className="p-3 border-t border-[#1a1a1a] flex gap-2">
+            <div className="p-3 flex gap-2" style={{ borderTop: "1px solid var(--border-default)" }}>
                 <input
-                    className="flex-1 bg-[#141414] border border-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-[#444] focus:outline-none focus:border-[#333] transition-colors"
+                    className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors"
+                    style={{
+                        background: "var(--bg-input)",
+                        border: "1px solid var(--border-default)",
+                        color: "var(--text-primary)",
+                    }}
                     placeholder="Mensagem..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -67,11 +82,10 @@ export function ChatTab({ currentUser }: Props) {
                 <button
                     onClick={send}
                     disabled={!input.trim()}
-                    className="w-9 h-9 rounded-lg bg-[#e63946] hover:bg-[#c1121f] text-white flex items-center justify-center transition-all disabled:opacity-30"
+                    className="w-9 h-9 rounded-lg text-white flex items-center justify-center transition-all disabled:opacity-30"
+                    style={{ background: "var(--accent-red)" }}
                 >
-                    <svg className="w-4 h-4 rotate-90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                    </svg>
+                    <Send size={15} />
                 </button>
             </div>
         </div>

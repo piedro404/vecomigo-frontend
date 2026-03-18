@@ -1,37 +1,61 @@
-import type { VideoState, Video } from "@app-types/modules/video.types"
-import type { User } from "@app-types/modules/user.types"
+import { useState } from "react";
+import { SkipForward, X, Play, Plus } from "lucide-react";
+import type { VideoState, Video } from "@app-types/modules/video.types";
+import type { User } from "@app-types/modules/user.types";
 
 type Props = {
-    videoState: VideoState | null
-    currentUser: User
-    onAddVideo: (video: any, playNow?: boolean) => void
-    onRemoveVideo: (videoId: string) => void
-    onSkip: () => void
-}
+    videoState: VideoState | null;
+    currentUser: User;
+    onAddVideo: (video: any, playNow?: boolean) => void;
+    onRemoveVideo: (videoId: string) => void;
+    onSkip: () => void;
+};
 
 function getYouTubeId(url: string): string | null {
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?\s]+)/)
-    return match?.[1] ?? null
+    const match = url.match(
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?\s]+)/,
+    );
+    return match?.[1] ?? null;
 }
 
-import { useState } from "react"
-
-export function PlaylistTab({ videoState, currentUser, onAddVideo, onRemoveVideo, onSkip }: Props) {
-    const [videoUrl, setVideoUrl] = useState("")
+export function PlaylistTab({
+    videoState,
+    currentUser,
+    onAddVideo,
+    onRemoveVideo,
+    onSkip,
+}: Props) {
+    const [videoUrl, setVideoUrl] = useState("");
 
     const handleAdd = (playNow: boolean) => {
-        const ytId = getYouTubeId(videoUrl)
-        if (!ytId) return
-        onAddVideo({ id: crypto.randomUUID(), youtubeId: ytId, title: `YouTube - ${ytId}`, addedBy: currentUser.id }, playNow)
-        setVideoUrl("")
-    }
+        const ytId = getYouTubeId(videoUrl);
+        if (!ytId) return;
+        onAddVideo(
+            {
+                id: crypto.randomUUID(),
+                youtubeId: ytId,
+                title: `YouTube - ${ytId}`,
+                addedBy: currentUser.id,
+            },
+            playNow,
+        );
+        setVideoUrl("");
+    };
 
     return (
         <div className="flex flex-col">
             {/* Input */}
-            <div className="p-4 border-b border-[#1a1a1a] flex flex-col gap-3">
+            <div
+                className="p-4 flex flex-col gap-3"
+                style={{ borderBottom: "1px solid var(--border-default)" }}
+            >
                 <input
-                    className="w-full bg-[#141414] border border-[#222] rounded-lg px-3 py-2 text-sm text-white placeholder-[#444] focus:outline-none focus:border-[#333] transition-colors"
+                    className="w-full rounded-lg px-3 py-2 text-sm text-white focus:outline-none transition-colors"
+                    style={{
+                        background: "var(--bg-input)",
+                        border: "1px solid var(--border-default)",
+                        color: "var(--text-primary)",
+                    }}
                     placeholder="Cole o link do YouTube..."
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
@@ -41,16 +65,27 @@ export function PlaylistTab({ videoState, currentUser, onAddVideo, onRemoveVideo
                     <button
                         onClick={() => handleAdd(false)}
                         disabled={!getYouTubeId(videoUrl)}
-                        className="flex-1 py-2 rounded-lg bg-[#1a1a1a] hover:bg-[#222] text-[#aaa] hover:text-white text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        style={{
+                            background: "var(--bg-card)",
+                            color: "var(--text-soft)",
+                        }}
                     >
-                        + Fila
+                        <Plus size={12} />
+                        Fila
                     </button>
                     <button
                         onClick={() => handleAdd(true)}
                         disabled={!getYouTubeId(videoUrl)}
-                        className="flex-1 py-2 rounded-lg bg-[#e63946]/10 hover:bg-[#e63946]/20 text-[#e63946] text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-[#e63946]/20"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        style={{
+                            background: "rgba(230,57,70,0.1)",
+                            color: "var(--accent-red)",
+                            border: "1px solid rgba(230,57,70,0.2)",
+                        }}
                     >
-                        ▶ Tocar agora
+                        <Play size={12} />
+                        Tocar agora
                     </button>
                 </div>
             </div>
@@ -58,9 +93,13 @@ export function PlaylistTab({ videoState, currentUser, onAddVideo, onRemoveVideo
             {/* List */}
             <div className="flex flex-col">
                 {!videoState?.playlist?.length ? (
-                    <div className="flex flex-col items-center gap-2 py-10 px-4">
-                        <p className="text-[#333] text-sm">Fila vazia</p>
-                        <p className="text-[#252525] text-xs text-center">Cole um link do YouTube acima</p>
+                    <div className="flex flex-col items-center py-10">
+                        <p
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}
+                        >
+                            Fila vazia
+                        </p>
                     </div>
                 ) : (
                     videoState.playlist.map((video, i) => (
@@ -75,40 +114,49 @@ export function PlaylistTab({ videoState, currentUser, onAddVideo, onRemoveVideo
                 )}
             </div>
         </div>
-    )
+    );
 }
 
 type VideoItemProps = {
-    video: Video
-    isFirst: boolean
-    onSkip: () => void
-    onRemove: () => void
-}
+    video: Video;
+    isFirst: boolean;
+    onSkip: () => void;
+    onRemove: () => void;
+};
 
 function VideoItem({ video, isFirst, onSkip, onRemove }: VideoItemProps) {
     return (
-        <div className={`flex items-center gap-3 px-4 py-3 group border-b border-[#111] transition-colors ${isFirst ? "bg-[#141414]" : "hover:bg-[#0f0f0f]"}`}>
-            <div className="relative w-16 h-9 rounded overflow-hidden flex-shrink-0 bg-[#1a1a1a]">
-                <img
-                    src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
-                    alt={video.title}
-                    className="w-full h-full object-cover"
-                />
-                {isFirst && (
-                    <div className="absolute inset-0 bg-[#e63946]/40 flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                        </svg>
-                    </div>
-                )}
-            </div>
+        <div
+            className="flex items-center gap-3 px-4 py-3 group border-b transition-colors"
+            style={{
+                background: isFirst ? "var(--bg-input)" : undefined,
+                borderColor: "var(--bg-card)",
+            }}
+        >
+            <img
+                src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
+                alt={video.title}
+                className="w-16 h-9 rounded object-cover flex-shrink-0"
+            />
 
             <div className="flex-1 min-w-0">
-                <p className={`text-xs truncate ${isFirst ? "text-white" : "text-[#666]"}`}>
+                <p
+                    className="text-xs truncate"
+                    style={{
+                        color: isFirst
+                            ? "var(--text-primary)"
+                            : "var(--text-soft)",
+                    }}
+                >
                     {video.title}
                 </p>
                 {isFirst && (
-                    <span className="text-[10px] text-[#e63946] font-medium">Tocando agora</span>
+                    <span
+                        className="text-[10px] font-medium"
+                        style={{ color: "var(--accent-red)" }}
+                    >
+                        Tocando agora
+                    </span>
                 )}
             </div>
 
@@ -116,24 +164,22 @@ function VideoItem({ video, isFirst, onSkip, onRemove }: VideoItemProps) {
                 {isFirst && (
                     <button
                         onClick={onSkip}
-                        className="w-6 h-6 rounded flex items-center justify-center text-[#555] hover:text-white hover:bg-[#222] transition-all"
+                        className="w-6 h-6 rounded flex items-center justify-center transition-all"
+                        style={{ color: "var(--text-muted)" }}
                         title="Pular"
                     >
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z" />
-                        </svg>
+                        <SkipForward size={14} />
                     </button>
                 )}
                 <button
                     onClick={onRemove}
-                    className="w-6 h-6 rounded flex items-center justify-center text-[#555] hover:text-[#e63946] hover:bg-[#1a1a1a] transition-all"
+                    className="w-6 h-6 rounded flex items-center justify-center transition-all"
+                    style={{ color: "var(--text-muted)" }}
                     title="Remover"
                 >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
-                    </svg>
+                    <X size={14} />
                 </button>
             </div>
         </div>
-    )
+    );
 }
