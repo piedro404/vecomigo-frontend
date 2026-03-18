@@ -19,6 +19,8 @@ type Props = {
 }
 
 const SYNC_THRESHOLD = 2
+const REMOTE_ACTION_LOCK_MS = 1000
+const PAUSE_DEBOUNCE_MS = 300
 
 export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, onEnded }: Props) {
     const wrapperRef = useRef<HTMLDivElement>(null)
@@ -27,6 +29,9 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
     const initialized = useRef(false)
     const isReady = useRef(false)
     const pendingState = useRef<VideoState | null>(null)
+    const hasPlayedOnce = useRef(false)         // true após o primeiro play do usuário
+    const lastPlayTime = useRef<number>(0)
+    const pauseDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const callbacksRef = useRef({ onPlay, onPause, onSeek, onEnded })
     useEffect(() => {
@@ -51,27 +56,38 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
         isRemoteAction.current = true
 
         if (currentVideo.youtubeId !== lastVideoId.current) {
-            // Vídeo novo — sempre usa loadVideoById para garantir que carrega
-            // e depois controla play/pause manualmente via onStateChange BUFFERING
             lastVideoId.current = currentVideo.youtubeId
+
+            // Mute trick só na primeira vez — browser bloqueia autoplay com som
+            if (state.isPlaying && !hasPlayedOnce.current) {
+                player.mute()
+            }
+
             player.loadVideoById({ videoId: currentVideo.youtubeId, startSeconds: state.currentTime })
 
-            // Se não deveria estar tocando, pausa assim que estiver pronto
+            if (state.isPlaying && !hasPlayedOnce.current) {
+                // Aguarda PLAYING e desmuta
+                const waitAndUnmute = setInterval(() => {
+                    if (player.getPlayerState?.() === 1) {
+                        player.unMute()
+                        player.setVolume(100)
+                        clearInterval(waitAndUnmute)
+                    }
+                }, 100)
+                setTimeout(() => clearInterval(waitAndUnmute), 5000)
+            }
+
             if (!state.isPlaying) {
                 const waitAndPause = setInterval(() => {
                     const s = player.getPlayerState?.()
-                    // PLAYING(1) ou BUFFERING(3) — já carregou o suficiente para pausar
                     if (s === 1 || s === 3) {
                         player.pauseVideo()
                         clearInterval(waitAndPause)
                     }
                 }, 100)
-
-                // Garante que o interval não vive para sempre
                 setTimeout(() => clearInterval(waitAndPause), 5000)
             }
         } else {
-            // Mesmo vídeo — só sincroniza tempo e estado
             const playerTime = player.getCurrentTime?.() ?? 0
             if (Math.abs(playerTime - state.currentTime) > SYNC_THRESHOLD) {
                 player.seekTo(state.currentTime, true)
@@ -80,7 +96,7 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
             else player.pauseVideo()
         }
 
-        setTimeout(() => { isRemoteAction.current = false }, 600)
+        setTimeout(() => { isRemoteAction.current = false }, REMOTE_ACTION_LOCK_MS)
     }, [playerRef])
 
     useEffect(() => {
@@ -96,17 +112,20 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                 width: rect.width || window.innerWidth,
                 height: rect.height || window.innerHeight,
                 playerVars: {
-                    autoplay: 0,
+                    autoplay: 1,
+                    mute: 1,
                     controls: 1,
                     rel: 0,
                     modestbranding: 1,
                     iv_load_policy: 3,
                     playsinline: 1,
-                    disablekb: 0,
                 },
                 events: {
-                    onReady: () => {
+                    onReady: (event: any) => {
                         isReady.current = true
+                        // Desmuta imediatamente — browser aceita após onReady
+                        event.target.unMute()
+                        event.target.setVolume(100)
                         if (pendingState.current) {
                             applyState(pendingState.current)
                             pendingState.current = null
@@ -117,13 +136,35 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
                         const player = playerRef.current
                         if (!player) return
                         const currentTime = player.getCurrentTime?.() ?? 0
+
                         switch (event.data) {
-                            case window.YT.PlayerState.PLAYING:
-                                callbacksRef.current.onPlay(currentTime); break
-                            case window.YT.PlayerState.PAUSED:
-                                callbacksRef.current.onPause(currentTime); break
+                            case window.YT.PlayerState.PLAYING: {
+                                hasPlayedOnce.current = true  // nunca mais precisa do mute trick
+                                if (pauseDebounceRef.current) {
+                                    clearTimeout(pauseDebounceRef.current)
+                                    pauseDebounceRef.current = null
+                                }
+                                lastPlayTime.current = Date.now()
+                                callbacksRef.current.onPlay(currentTime)
+                                break
+                            }
+                            case window.YT.PlayerState.PAUSED: {
+                                const msSincePlay = Date.now() - lastPlayTime.current
+                                if (msSincePlay < PAUSE_DEBOUNCE_MS) break
+
+                                if (pauseDebounceRef.current) clearTimeout(pauseDebounceRef.current)
+                                pauseDebounceRef.current = setTimeout(() => {
+                                    const s = playerRef.current?.getPlayerState?.()
+                                    if (s === window.YT.PlayerState.PAUSED) {
+                                        callbacksRef.current.onPause(currentTime)
+                                    }
+                                    pauseDebounceRef.current = null
+                                }, PAUSE_DEBOUNCE_MS)
+                                break
+                            }
                             case window.YT.PlayerState.ENDED:
-                                callbacksRef.current.onEnded(); break
+                                callbacksRef.current.onEnded()
+                                break
                         }
                     },
                 },
@@ -153,6 +194,7 @@ export function VideoPlayer({ videoState, playerRef, onPlay, onPause, onSeek, on
 
         return () => {
             cleanup?.()
+            if (pauseDebounceRef.current) clearTimeout(pauseDebounceRef.current)
             playerRef.current?.destroy()
             playerRef.current = null
             initialized.current = false
