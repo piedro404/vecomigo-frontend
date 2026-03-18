@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useRoom } from "@hooks/useRoom";
 import { useVideo } from "@hooks/useVideo";
 
