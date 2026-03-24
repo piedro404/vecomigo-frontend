@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Send, ArrowDown } from "lucide-react";
 import type { User } from "@app-types/modules/user.types";
 import type { Chat } from "@app-types/modules/chat.types";
 
@@ -15,6 +15,10 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
 
     const containerRef = useRef<HTMLDivElement>(null);
     const endRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        endRef.current?.scrollIntoView({ behavior: "auto" });
+    }, []);
 
     const getUserColor = (id: string) => {
         const colors = [
@@ -56,8 +60,7 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
         const yesterday = new Date();
         yesterday.setDate(today.getDate() - 1);
 
-        if (d.toDateString() === yesterday.toDateString())
-            return "Ontem";
+        if (d.toDateString() === yesterday.toDateString()) return "Ontem";
 
         return formatDate(date);
     };
@@ -113,8 +116,7 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
                         const prev = chat[index - 1];
 
                         const isSameUser = prev?.user.id === msg.user.id;
-                        const isCurrentUser =
-                            msg.user.id === currentUser.id;
+                        const isCurrentUser = msg.user.id === currentUser.id;
 
                         const userColor = getUserColor(msg.user.id);
 
@@ -125,8 +127,7 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
                             ? new Date(prev.createdAt).toDateString()
                             : null;
 
-                        const showDateDivider =
-                            currentDate !== prevDate;
+                        const showDateDivider = currentDate !== prevDate;
 
                         return (
                             <div key={msg.id}>
@@ -140,9 +141,7 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
                                                 color: "var(--text-muted)",
                                             }}
                                         >
-                                            {formatSmartDate(
-                                                msg.createdAt,
-                                            )}
+                                            {formatSmartDate(msg.createdAt)}
                                         </span>
                                     </div>
                                 )}
@@ -176,8 +175,7 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
                                                 : {
                                                       background:
                                                           "var(--bg-elevated)",
-                                                      color:
-                                                          "var(--text-primary)",
+                                                      color: "var(--text-primary)",
                                                       borderTopLeftRadius: 6,
                                                   }
                                         }
@@ -194,9 +192,7 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
                                                     : "var(--text-muted)",
                                             }}
                                         >
-                                            {formatTime(
-                                                msg.createdAt,
-                                            )}
+                                            {formatTime(msg.createdAt)}
                                         </span>
                                     </div>
                                 </div>
@@ -215,13 +211,13 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
                             behavior: "smooth",
                         })
                     }
-                    className="absolute bottom-20 left-1/2 -translate-x-1/2 px-3 py-1 text-xs rounded-full shadow-md"
+                    className="absolute bottom-20 left-1/2 -translate-x-1/2 w-10 h-10 flex items-center justify-center rounded-full shadow-md transition hover:scale-105"
                     style={{
                         background: "var(--accent-red)",
                         color: "#fff",
                     }}
                 >
-                    ↓ Novas mensagens
+                    <ArrowDown size={18} />
                 </button>
             )}
 
