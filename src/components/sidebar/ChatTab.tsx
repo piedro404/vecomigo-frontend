@@ -66,7 +66,7 @@ export function ChatTab({ currentUser, chat, onSendMessage }: Props) {
         const el = containerRef.current;
         if (!el) return;
 
-        const threshold = 50;
+        const threshold = 150;
         const atBottom =
             el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
 

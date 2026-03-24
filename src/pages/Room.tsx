@@ -8,7 +8,7 @@ import { VideoPlayer } from "@components/VideoPlayer";
 import { VideoControls } from "@components/VideoControls";
 import { Sidebar } from "@components/sidebar/Sidebar";
 import Logo from "@components/Logo";
-    
+
 import { Menu } from "lucide-react";
 
 export default function Room() {
@@ -18,7 +18,8 @@ export default function Room() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const { user, users, videoState, chat, updateName } = useRoom(roomId);
-    const { play, pause, seek, skip, onEnded, addVideo, removeVideo } = useVideo(roomId);
+    const { play, pause, seek, skip, onEnded, addVideo, removeVideo } =
+        useVideo(roomId);
     const { sendMessage } = useChat(roomId);
 
     return (
@@ -98,6 +99,7 @@ ${sidebarOpen ? "w-80" : "w-0"}
                 >
                     <div className="w-80 h-full border-l border-[var(--border-default)] bg-[var(--bg-card)]">
                         <Sidebar
+                            sidebarOpen={sidebarOpen}
                             roomId={roomId!}
                             currentUser={user}
                             users={users}
