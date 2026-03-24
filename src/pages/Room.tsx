@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRoom } from "@hooks/useRoom";
 import { useVideo } from "@hooks/useVideo";
+import { useChat } from "@hooks/useChat";
 
 import { VideoPlayer } from "@components/VideoPlayer";
 import { VideoControls } from "@components/VideoControls";
@@ -16,9 +17,9 @@ export default function Room() {
     const playerRef = useRef<any>(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
-    const { user, users, videoState, updateName } = useRoom(roomId);
-    const { play, pause, seek, skip, onEnded, addVideo, removeVideo } =
-        useVideo(roomId);
+    const { user, users, videoState, chat, updateName } = useRoom(roomId);
+    const { play, pause, seek, skip, onEnded, addVideo, removeVideo } = useVideo(roomId);
+    const { sendMessage } = useChat(roomId);
 
     return (
         <div className="h-screen bg-[var(--bg-base)] flex flex-col overflow-hidden text-white">
@@ -98,13 +99,15 @@ ${sidebarOpen ? "w-80" : "w-0"}
                     <div className="w-80 h-full border-l border-[var(--border-default)] bg-[var(--bg-card)]">
                         <Sidebar
                             roomId={roomId!}
-                            videoState={videoState}
-                            users={users}
                             currentUser={user}
+                            users={users}
+                            videoState={videoState}
+                            chat={chat}
+                            onUpdateName={updateName}
                             onAddVideo={addVideo}
                             onRemoveVideo={removeVideo}
                             onSkip={skip}
-                            onUpdateName={updateName}
+                            onSendMessage={sendMessage}
                         />
                     </div>
                 </div>

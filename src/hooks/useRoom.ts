@@ -6,12 +6,14 @@ import type { VideoState } from "@app-types/modules/video.types";
 import { socket } from "src/socket";
 import type { ApiResponse } from "@app-types/api.response";
 import type { Room } from "@app-types/modules/room.types";
+import type { Chat } from "@app-types/modules/chat.types";
 
 export function useRoom(roomId: string | undefined) {
     const navigate = useNavigate();
     const { user, updateUser } = useUser();
     const [users, setUsers] = useState<User[]>([]);
     const [videoState, setVideoState] = useState<VideoState | null>(null);
+    const [chat, setChat] = useState<Chat[]>([]);
 
     const createRoom = useCallback(() => {
         socket.emit("create-room", { user }, (response: ApiResponse<Room>) => {
@@ -33,6 +35,7 @@ export function useRoom(roomId: string | undefined) {
                 response: ApiResponse<{
                     room: Room;
                     videoState: VideoState | null;
+                    chat: Chat[];
                 }>,
             ) => {
                 if (!response.status || !response.data) {
@@ -41,13 +44,19 @@ export function useRoom(roomId: string | undefined) {
                 }
                 
                 setVideoState(response.data.videoState);
+                setChat(response.data.chat);
                 setUsers(Array.from(response.data.room.users.values()));
             },
         );
 
-        socket.on("room-updated", (data: { users: User[], videoState: VideoState | null }) => {
+        socket.on("room-updated", (data: { 
+            users: User[], 
+            videoState: VideoState | null,
+            chat: Chat[]
+        }) => {
             setUsers(data.users);
             setVideoState(data.videoState);
+            setChat(data.chat);
 
             if (data.users.length === 0) {
                 navigate("/", { replace: true });
@@ -56,6 +65,10 @@ export function useRoom(roomId: string | undefined) {
 
         socket.on("video-state-updated", (data: { videoState: VideoState }) => {
             setVideoState(data.videoState);
+        });
+
+        socket.on("chat-update", (data: { message: Chat }) => {
+            setChat((prev) => [...prev, data.message]);
         });
 
         socket.on("room-closed", () => {
@@ -97,6 +110,7 @@ export function useRoom(roomId: string | undefined) {
         user,
         users,
         videoState,
+        chat,
         createRoom,
         updateName,
     };

@@ -5,18 +5,21 @@ import type { User } from "@app-types/modules/user.types"
 import { PlaylistTab } from "./PlaylistTab"
 import { UsersTab } from "./UsersTab"
 import { ChatTab } from "./ChatTab"
+import type { Chat } from "@app-types/modules/chat.types"
 
 type Tab = "playlist" | "users" | "chat"
 
 type Props = {
     roomId: string
-    videoState: VideoState | null
-    users: User[]
     currentUser: User
+    users: User[]
+    chat: Chat[]
+    videoState: VideoState | null
+    onUpdateName: (name: string) => void
     onAddVideo: (video: any, playNow?: boolean) => void
     onRemoveVideo: (videoId: string) => void
     onSkip: () => void
-    onUpdateName: (name: string) => void
+    onSendMessage: (message: Chat) => void;
 }
 
 const tabs = [
@@ -53,7 +56,7 @@ export function Sidebar(props: Props) {
             <div className="flex-1 overflow-y-auto">
                 {activeTab === "playlist" && <PlaylistTab {...props} />}
                 {activeTab === "users" && <UsersTab {...props} />}
-                {activeTab === "chat" && <ChatTab currentUser={props.currentUser} />}
+                {activeTab === "chat" && <ChatTab {...props} />}
             </div>
         </div>
     )
